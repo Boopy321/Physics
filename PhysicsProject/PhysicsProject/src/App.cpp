@@ -2,6 +2,7 @@
 #include "App.h"
 #include "GLFW\glfw3.h"
 #include "Physics/Physics.h"
+#include "Physics\PhysicTutorial.h"
 #include "AntTweakBar.h"
 #include "Assets\Camera\FlyCamera.h"
 #include <iostream>
@@ -16,7 +17,7 @@ App::App()
 {
 	m_wWidth = 1024;
 	m_wHeight = 800;
-	m_Physics = new Physics();
+	m_Physics = new PhysicTutorial();
 }
 
 App::~App()
@@ -83,7 +84,6 @@ void App::Update(float deltatime)
 	glClearColor(m_clearColour.x, m_clearColour.y, m_clearColour.z, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 	//Camera
 	_gameCamera.update(deltatime);
 	//Current Games Draw
@@ -104,7 +104,8 @@ void App::Update(float deltatime)
 
 void App::Shutdown()
 {
-	m_Physics->Shutdown();
+	//must Use with PHYSX Engine
+		//m_Physics->Shutdown();
 	TwDeleteAllBars();
 	TwTerminate();
 	glfwDestroyWindow(window);

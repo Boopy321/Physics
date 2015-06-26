@@ -48,6 +48,9 @@
     <ClCompile Include="dep\aieutilities\Gizmos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Physics\PhysicsActor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Physics\Physics.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dep\aieutilities\Gizmos.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Physics\PhysicsActor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

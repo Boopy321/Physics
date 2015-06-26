@@ -3,6 +3,7 @@
 
 class Physics;
 struct GLFWwindow;
+class PhysicTutorial;
 #include "Assets/Camera/FlyCamera.h"
 class AntTweakBar;
 struct Light;
@@ -41,6 +42,6 @@ private:
 
 	glm::vec4 m_clearColour;
 
-	Physics* m_Physics;
+	PhysicTutorial* m_Physics;
 };
 

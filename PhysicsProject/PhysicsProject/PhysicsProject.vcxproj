@@ -92,6 +92,7 @@
     <ClCompile Include="src\Assets\InputManager\InputManager.cpp" />
     <ClCompile Include="src\Assets\Texture2D\Texture2D.cpp" />
     <ClCompile Include="src\Assets\Timer\Timer.cpp" />
+    <ClCompile Include="src\Physics\PhysicsActor.cpp" />
     <ClCompile Include="src\Physics\PhysicTutorial.cpp" />
     <ClCompile Include="src\gl_core_4_4.c" />
     <ClCompile Include="src\App.cpp" />
@@ -105,6 +106,7 @@
     <ClInclude Include="src\Assets\InputManager\InputManager.h" />
     <ClInclude Include="src\Assets\Texture2D\Texture2D.h" />
     <ClInclude Include="src\Assets\Timer\Timer.h" />
+    <ClInclude Include="src\Physics\PhysicsActor.h" />
     <ClInclude Include="src\Physics\PhysicTutorial.h" />
     <ClInclude Include="src\gl_core_4_4.h" />
     <ClInclude Include="src\App.h" />
