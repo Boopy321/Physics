@@ -1,7 +1,7 @@
 #include "gl_core_4_4.h"
 #include "App.h"
 #include "GLFW\glfw3.h"
-#include "Physics/Physics.h"
+#include "Phyx/Physics.h"
 #include "Physics\PhysicTutorial.h"
 #include "AntTweakBar.h"
 #include "Assets\Camera\FlyCamera.h"
@@ -120,5 +120,7 @@ void App::Draw(float a_deltatime)
 	Gizmos::addTransform(glm::mat4(1), 5.0f);
 	m_Physics->Update(a_deltatime);
 	Gizmos::draw(_gameCamera.getProjectionView());
+	
+	//Gizmos::draw2D(glm::ortho<float>(-100, 100, -100 / AR, 100 / AR, -1.0f, 1.0f));
 }
 #pragma endregion

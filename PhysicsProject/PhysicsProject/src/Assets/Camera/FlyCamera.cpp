@@ -6,10 +6,10 @@
 
 FlyCamera::FlyCamera()
 {						//Position           //Point of View    //Up vector
-	m_viewTransform = lookAt(vec3(2,2,2), vec3(1,1,1), vec3(0, 1,0));
+	m_viewTransform = lookAt(vec3(0,10,10), vec3(0,0,1), vec3(0, 1,0));
 	m_worldTransform = glm::inverse(m_viewTransform);
 	setPersepective(glm::pi<float>()*0.25f, 16.f / 9.f, 0.1f, 1000.f);
-	m_fFlySpeed = 10.f;
+	m_fFlySpeed = 100.f;
 	
 }
 

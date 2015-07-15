@@ -97,7 +97,7 @@
     <ClCompile Include="src\gl_core_4_4.c" />
     <ClCompile Include="src\App.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\Physics\Physics.cpp" />
+    <ClCompile Include="src\Phyx\Physics.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\aieutilities\Gizmos.h" />
@@ -110,7 +110,7 @@
     <ClInclude Include="src\Physics\PhysicTutorial.h" />
     <ClInclude Include="src\gl_core_4_4.h" />
     <ClInclude Include="src\App.h" />
-    <ClInclude Include="src\Physics\Physics.h" />
+    <ClInclude Include="src\Phyx\Physics.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
