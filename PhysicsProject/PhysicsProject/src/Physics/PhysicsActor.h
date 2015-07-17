@@ -5,9 +5,10 @@
 
 enum ShapeType
 {
-	PLANE = 0,
-	SPHERE = 1,
-	BOX = 2,
+	PLANE,
+	SPHERE,
+	BOX,
+	SHAPE_COUNT,
 };
 
 //Base
@@ -59,10 +60,15 @@ public:
 
 class BoxClass : public DIYRigidBody
 {
-	float length;
+	
+public:
+
+	float depth;
 	float height;
-	BoxClass(glm::vec3 position, glm::vec3 velocity, float mass, float radius,
-	glm::vec4 colour);
+	float width;
+	bool wireFrame;
+	BoxClass(glm::vec3 position, glm::vec3 velocity, float mass, glm::vec3 LWH,
+	glm::vec4 colour, bool a_wireframe);
 
 	virtual void makeGizmo();
 };
@@ -91,12 +97,19 @@ public:
 	void debugScene();
 	void addGizmos();
 
-	static const int NUMBERSHAPE = 2;
+	;
 
 	static bool Plane2Plane(PhysicsObject* , PhysicsObject*);
 	static bool Plane2Sphere(PhysicsObject*, PhysicsObject*);
+	static bool Plane2AABB(PhysicsObject*, PhysicsObject*);
+
 	static bool Sphere2Plane(PhysicsObject*, PhysicsObject*);
 	static bool Sphere2Sphere(PhysicsObject*, PhysicsObject*);
+	static bool Sphere2AABB(PhysicsObject*, PhysicsObject*);
 
+	static bool AABB2Sphere(PhysicsObject*, PhysicsObject*);
+	static bool AABB2Plane(PhysicsObject*, PhysicsObject*);
+	static bool AABB2AABB(PhysicsObject*, PhysicsObject*);
+	
 	void checkForCollision();
 };
