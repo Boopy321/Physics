@@ -62,10 +62,10 @@ class BoxClass : public DIYRigidBody
 {
 	
 public:
-
-	float depth;
-	float height;
 	float width;
+	
+	float height;
+	float depth;
 	bool wireFrame;
 	BoxClass(glm::vec3 position, glm::vec3 velocity, float mass, glm::vec3 LWH,
 	glm::vec4 colour, bool a_wireframe);

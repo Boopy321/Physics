@@ -22,17 +22,17 @@ void PhysicTutorial::DIYPhysicsSetup1()
 		glm::vec4(1, 0, 0, 1));
 	physicsScene->addActor(newBall);
 
-	newBall = new SphereClass(glm::vec3(-5, 0, 0), glm::vec3(0, 20, 0), 40.0f, 3,
-		glm::vec4(1, 0, 0, 1));
-	physicsScene->addActor(newBall);
+	//newBall = new SphereClass(glm::vec3(-5, 0, 0), glm::vec3(0, 20, 0), 40.0f, 3,
+	//	glm::vec4(1, 0, 0, 1));
+	//physicsScene->addActor(newBall);
 
-	newBall = new SphereClass(glm::vec3(5, 20, 0), glm::vec3(200, 0, 0), 40.0f, 3,
-		glm::vec4(1, 0, 0, 1));
-	physicsScene->addActor(newBall);
+	//newBall = new SphereClass(glm::vec3(5, 20, 0), glm::vec3(200, 0, 0), 40.0f, 3,
+	//	glm::vec4(1, 0, 0, 1));
+	//physicsScene->addActor(newBall);
 
-	newBall = new SphereClass(glm::vec3(0, 20, 0), glm::vec3(-2000, 0, 0), 40.0f, 3,
-		glm::vec4(1, 0, 0, 1));
-	physicsScene->addActor(newBall);
+	//newBall = new SphereClass(glm::vec3(0, 20, 0), glm::vec3(-200, 0, 0), 40.0f, 3,
+	//	glm::vec4(1, 0, 0, 1));
+	//physicsScene->addActor(newBall);
 
 	BoxClass* newBox;
 	newBox = new BoxClass(glm::vec3(0, 0, 0), glm::vec3(0, 0, 0), 5.0f, glm::vec3(1, 1, 1), glm::vec4(0, 1, 1, 1), false);
@@ -43,16 +43,16 @@ void PhysicTutorial::DIYPhysicsSetup1()
 
 	PlaneClass* newLine;
 	//floor
-	newLine = new PlaneClass(glm::vec3(0, 1, 0), 60);
+	newLine = new PlaneClass(glm::vec3(0, 1, 0), -60);
 	physicsScene->addActor(newLine);
 	//left wall
-	newLine = new PlaneClass(glm::vec3(1, 0, 0), 60);
+	newLine = new PlaneClass(glm::vec3(1, 0, 0), -60);
 	physicsScene->addActor(newLine);
 	//right wall 
-	newLine = new PlaneClass(glm::vec3(-1, 0, 0), 60);
+	newLine = new PlaneClass(glm::vec3(-1, 0, 0), -60);
 	physicsScene->addActor(newLine);
 	//Roof
-	newLine = new PlaneClass(glm::vec3(0, -1, 0), 60);
+	newLine = new PlaneClass(glm::vec3(0, -1, 0), -60);
 	physicsScene->addActor(newLine);
 }
 

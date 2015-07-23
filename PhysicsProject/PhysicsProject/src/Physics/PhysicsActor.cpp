@@ -1,9 +1,11 @@
 #include "PhysicsActor.h"
 #include "glm\glm.hpp"
 #include "glm\gtc\matrix_transform.hpp"
+#include "glm\gtx\transform.hpp"
 #include "Gizmos.h"
 #include "GLFW\glfw3.h"
 #include <cmath>
+#include <math.h>
 
 #pragma region DIYRigidBody
 
@@ -46,10 +48,10 @@ void DIYRigidBody::debug()
 
 #pragma region PlaneClass
 
-PlaneClass::PlaneClass(glm::vec3 a_normal , float a_distance) 
+PlaneClass::PlaneClass(glm::vec3 a_normal, float a_distance)
 {
 	normal = a_normal;
-	distance = a_distance;
+	distance = a_distance; 
 	_shapeID = ShapeType::PLANE;
 
 }
@@ -57,14 +59,16 @@ PlaneClass::PlaneClass(glm::vec3 a_normal , float a_distance)
 
 void PlaneClass::makeGizmo()
 {
-	float lineSegmentLength = 300;
+	float lineSegmentLength = distance;
 	glm::vec3 centrePoint = normal * distance;
 	glm::vec3 parallel = glm::vec3(normal.y, -normal.x, normal.z);
 	//easy to rotate normal through 90degrees around z
 	glm::vec4 colour(0, 0, 0, 1);
 	glm::vec3 start = centrePoint + (parallel * lineSegmentLength);
 	glm::vec3 end = centrePoint - (parallel * lineSegmentLength);
+
 	Gizmos::addLine(start.xyz(), end.xyz(), colour);
+	Gizmos::addLine(centrePoint, centrePoint+normal, glm::vec4(0,1,0,1));
 }
 
 
@@ -82,9 +86,9 @@ BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm
 
 	width = LWH.x;
 	height = LWH.y;
-	
+
 	depth = LWH.z;
-	
+
 	wireFrame = a_wireframe;
 	_shapeID = ShapeType::BOX;
 }
@@ -93,20 +97,20 @@ void BoxClass::makeGizmo()
 {
 	if (wireFrame)
 	{
-		Gizmos::addAABB(position, glm::vec3(length, height, width), m_colour);
+		Gizmos::addAABB(position, glm::vec3(width, height, depth), m_colour);
 	}
 	else
 	{
-		Gizmos::addAABBFilled(position, glm::vec3(length, height, width), m_colour);
+		Gizmos::addAABBFilled(position, glm::vec3(width, height, depth), m_colour);
 	}
-	
+
 }
 #pragma endregion
 
 #pragma region SphereClass
 
 SphereClass::SphereClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, float a_radius,
-	glm::vec4 a_colour) :DIYRigidBody(a_position,a_velocity,0,a_mass)
+	glm::vec4 a_colour) :DIYRigidBody(a_position, a_velocity, 0, a_mass)
 {
 	position = a_position;
 	velocity = a_velocity;
@@ -144,9 +148,9 @@ void DIYPhysicScene::upDate()
 {
 	addGizmos();
 	checkForCollision();
-	for(auto actor : actors)
+	for (auto actor : actors)
 	{
-		actor->update(gravity,timeStep);
+		actor->update(gravity, timeStep);
 	}
 }
 
@@ -166,7 +170,8 @@ static fn collisionfunctionArray[] =
 	DIYPhysicScene::Plane2Plane, DIYPhysicScene::Plane2Sphere, DIYPhysicScene::Plane2AABB,
 	DIYPhysicScene::Sphere2Plane, DIYPhysicScene::Sphere2Sphere, DIYPhysicScene::Sphere2AABB,
 	DIYPhysicScene::AABB2Plane, DIYPhysicScene::AABB2Sphere, DIYPhysicScene::AABB2AABB,
-};
+};
+
 
 void DIYPhysicScene::checkForCollision()
 {
@@ -181,14 +186,15 @@ void DIYPhysicScene::checkForCollision()
 			int _shapeID1 = object1->_shapeID;
 			int _shapeID2 = object2->_shapeID;
 			//using function pointers
-			int functionIndex = (_shapeID1 * SHAPE_COUNT ) +_shapeID2;
+			int functionIndex = (_shapeID1 * SHAPE_COUNT) + _shapeID2;
 			fn collisionFunctionPtr = collisionfunctionArray[functionIndex];
 			if (collisionFunctionPtr != NULL)
 			{
 				collisionFunctionPtr(object1, object2);
 			}
 		}
-	}
+	}
+
 }
 
 bool DIYPhysicScene::Plane2Plane(PhysicsObject*, PhysicsObject*)
@@ -239,12 +245,12 @@ bool DIYPhysicScene::Sphere2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 			glm::vec3 forceVector = collisionVector * 1.0f / (1 / sphere1->mass + 1 / sphere2->mass);
 
 			//Newton 3rd law
-			sphere1->applyForceToActor(sphere2,  forceVector * 2.0f);
+			sphere1->applyForceToActor(sphere2, forceVector * 2.0f);
 
 			glm::vec3 seperationVector = collisionNormal * intersection * 0.5f;
 
 			sphere1->position -= seperationVector;
-			sphere2->position += seperationVector; 
+			sphere2->position += seperationVector;
 
 			return true;
 		}
@@ -274,11 +280,11 @@ bool DIYPhysicScene::Sphere2Plane(PhysicsObject* obj1, PhysicsObject* obj2)
 		{
 			//Find the point in where the collision occured
 			glm::vec3 planeNormal = plane->normal;
-			if (sphereToPlane < 0)
+			if (sphereToPlane > 0)
 			{
 				planeNormal *= -1;
 			}
-			
+
 			glm::vec3 forceVector = -1 * sphere->mass * planeNormal * std::abs(glm::dot(planeNormal, sphere->velocity));
 			//sphere->applyForceToActor(sphere, sphere->velocity);
 			sphere->applyForce(2.0f * forceVector);
@@ -301,55 +307,62 @@ bool DIYPhysicScene::AABB2Plane(PhysicsObject* obj1, PhysicsObject* obj2)
 {
 	BoxClass *box = dynamic_cast<BoxClass*>(obj1);
 	PlaneClass *plane = dynamic_cast<PlaneClass*>(obj2);
+	std::vector<float> BoxPoints;
 	//if we are successful then test for collision
 	if (box != NULL && plane != NULL)
 	{
 		glm::vec3 collisionNormal = plane->normal;
-		//EACH GOD DAM POINT OF THE BOX
-		float Point1 = glm::dot(box->position, plane->normal) - plane->distance;
 
-		float Point2 = glm::dot(glm::vec3(box->position.x + box->width, box->position.y, box->position.z),
-																		plane->normal) - plane->distance;
-		float Point3 = glm::dot(glm::vec3(box->position.x + box->width, box->position.y + box->height, box->position.z),
-																						plane->normal) - plane->distance;
-		float Point4 = glm::dot(glm::vec3(box->position.x + box->width, box->position.y + box->height, box->position.z + box->depth),
-																									plane->normal) - plane->distance;
-		float Point5 = glm::dot(glm::vec3(box->position.x, box->position.y + box->height, box->position.z),
-																		plane->normal) - plane->distance;
-		float Point6 = glm::dot(glm::vec3(box->position.x + box->width, box->position.y, box->position.z),
-																		plane->normal) - plane->distance;
-		float Point7 = glm::dot(glm::vec3(box->position.x + box->width, box->position.y, box->position.z),
-																		plane->normal) - plane->distance;
-		float Point8 = glm::dot(glm::vec3(box->position.x + box->width, box->position.y, box->position.z),
-																		plane->normal) - plane->distance;
-		float Point9 = glm::dot(glm::vec3(box->position.x + box->width, box->position.y, box->position.z),
-																		plane->normal) - plane->distance;
+		float BoxWidth = box->width / 2;
+		float BoxHeight = box->height / 2;
+		float BoxDepth = box->depth / 2;
 
+		float Collision = 0.0f;
 
-	//Box Vertices
-	//	Pos.x + width, pos.y, pos.z
-	//	pos.x + width, pos.y + height, pos.z
-	//	pos.x + width, pos.y + height, pos.z + depth
-	//
-	//	Pos.x, pos.y + height, pos.z + depth
-	//	pos.x + width, pos.y + height, pos.z
-	//	pos.x + width, pos.y, pos.z + depth
-	//
-	//	Pos.x + width, pos.y, pos.z
-	//	pos.x + width, pos.y + h, pos.z
-	//	pos.x + width, pos.y + h, pos.z + depth
+		glm::vec3 points[8] = {
+			glm::vec3(box->position.x + BoxWidth, box->position.y + BoxHeight, box->position.z + BoxDepth),
+			glm::vec3(box->position.x - BoxWidth, box->position.y - BoxHeight, box->position.z - BoxDepth),
+			glm::vec3(box->position.x + BoxWidth, box->position.y - BoxHeight, box->position.z + BoxDepth),
+			glm::vec3(box->position.x - BoxWidth, box->position.y - BoxHeight, box->position.z + BoxDepth),
+			glm::vec3(box->position.x + BoxWidth, box->position.y - BoxHeight, box->position.z - BoxDepth),
+			glm::vec3(box->position.x - BoxWidth, box->position.y + BoxHeight, box->position.z - BoxDepth),
+			glm::vec3(box->position.x + BoxWidth, box->position.y + BoxHeight, box->position.z - BoxDepth),
+			glm::vec3(box->position.x - BoxWidth, box->position.y + BoxHeight, box->position.z + BoxDepth)
+		};
 
-
-
-
-
-		//if we are behind plane then we flip the normal
+		float dotPoints[8];
+		//Dot Product of each point on the box 
+		for(int i = 0; i < 8; i++)
+		{
+			dotPoints[i] = glm::dot(points[i], plane->normal) - plane->distance;
+		}
 		
-		
-		//Treat each part the AABB as a Point
+		for (int i = 0; i < 8; i++)
+		{
+			//Flip the plane if its on the reverse
+			if (dotPoints[i] < 0)
+			{
+				collisionNormal *= -1;
+				dotPoints[i] *= -1;
+			}
 
+			if (dotPoints[i] > 0.0f)
+			{
+				//Find the point in where the collision occured
+				glm::vec3 planeNormal = plane->normal;
+				if (dotPoints[i] > 0)
+				{
+					planeNormal *= -1;
+				}
 
+				glm::vec3 forceVector = -1 * box->mass * planeNormal * std::abs(glm::dot(planeNormal, box->velocity));
+				//sphere->applyForceToActor(sphere, sphere->velocity);
+				box->applyForce(2.0f * forceVector);
+				box->position += collisionNormal * Collision * 0.5f;
+				return true;
+			}
 
+		}
 	}
 	return false;
 }
@@ -375,15 +388,15 @@ bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 	{
 
 		glm::vec3 delta = box2->position - box1->position;
-		
-		glm::vec3 box1XYZmax(box1->position.x + box1->length,
-			box1->position.y + box1->width,
-			box1->position.z + box1->height);
+
+		glm::vec3 box1XYZmax(box1->position.x + box1->width,
+			box1->position.y + box1->height,
+			box1->position.z + box1->depth);
 
 
-		glm::vec3 box2XYZmax(box2->position.x + box2->length,
-			box2->position.y + box2->width,
-			box2->position.z + box2->height);
+		glm::vec3 box2XYZmax(box2->position.x + box2->width,
+			box2->position.y + box2->height,
+			box2->position.z + box2->depth);
 
 		glm::vec3 box1overlap = box1XYZmax - box2->position;
 		glm::vec3 box2overlap = box2XYZmax - box1->position;
@@ -391,13 +404,13 @@ bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 		//AABB Collision check
 		if (//Length checks //x
 			box1->position.x < box2XYZmax.x &&
-			box1->position.x + box1->length > box2->position.x &&
+			box1->position.x + box1->width > box2->position.x &&
 			//Width Checks // y
 			box1->position.y < box2XYZmax.y &&
-			box1->position.y + box1->width > box2->position.y &&
+			box1->position.y + box1->height > box2->position.y &&
 			//Height Checks //z
 			box1->position.z < box2XYZmax.z &&
-			box1->position.z + box1->height > box2->position.z)
+			box1->position.z + box1->depth > box2->position.z)
 		{
 
 			glm::vec3 collisionNormal = glm::normalize(delta);
