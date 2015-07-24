@@ -23,12 +23,12 @@ void DIYRigidBody::applyForce(glm::vec3 force)
 
 void DIYRigidBody::update(glm::vec3 gravity, float timeStep)
 {
-	//1st law
-	position += velocity * timeStep;
-
-	applyForce(gravity);
-	//2nd law basically
-
+	//Only actually move if the object is not Static
+	if (!make_static)
+	{
+		applyForce(gravity);
+		position += velocity * timeStep;
+	}
 }
 
 void DIYRigidBody::applyForceToActor(DIYRigidBody* actor2, glm::vec3 force)
@@ -77,7 +77,7 @@ void PlaneClass::makeGizmo()
 #pragma region BoxClass
 
 ///LWH = Length, Width, height of the box
-BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm::vec3 LWH, glm::vec4 a_colour, bool a_wireframe) : DIYRigidBody(a_position, a_velocity, 0, a_mass)
+BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm::vec3 LWH, glm::vec4 a_colour, bool a_wireframe, bool a_static) : DIYRigidBody(a_position, a_velocity, 0, a_mass)
 {
 	position = a_position;
 	velocity = a_velocity;
@@ -91,6 +91,7 @@ BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm
 
 	wireFrame = a_wireframe;
 	_shapeID = ShapeType::BOX;
+	make_static = a_static;
 }
 
 void BoxClass::makeGizmo()
@@ -110,7 +111,7 @@ void BoxClass::makeGizmo()
 #pragma region SphereClass
 
 SphereClass::SphereClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, float a_radius,
-	glm::vec4 a_colour) :DIYRigidBody(a_position, a_velocity, 0, a_mass)
+	glm::vec4 a_colour,bool a_static) :DIYRigidBody(a_position, a_velocity, 0, a_mass)
 {
 	position = a_position;
 	velocity = a_velocity;
@@ -118,6 +119,7 @@ SphereClass::SphereClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mas
 	m_colour = a_colour;
 	_radius = a_radius;
 	_shapeID = ShapeType::SPHERE;
+	make_static = a_static;
 }
 
 void SphereClass::makeGizmo()
@@ -249,8 +251,15 @@ bool DIYPhysicScene::Sphere2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 
 			glm::vec3 seperationVector = collisionNormal * intersection * 0.5f;
 
-			sphere1->position -= seperationVector;
-			sphere2->position += seperationVector;
+			if (!sphere1->make_static)
+			{
+				sphere1->position -= seperationVector;
+			}
+			if (!sphere2->make_static)
+			{
+				sphere2->position += seperationVector;
+			}
+			
 
 			return true;
 		}
@@ -331,34 +340,24 @@ bool DIYPhysicScene::AABB2Plane(PhysicsObject* obj1, PhysicsObject* obj2)
 		};
 
 		float dotPoints[8];
+
 		//Dot Product of each point on the box 
 		for(int i = 0; i < 8; i++)
 		{
 			dotPoints[i] = glm::dot(points[i], plane->normal) - plane->distance;
 		}
-		
+		//Loop through each point of the box to see if any collide
 		for (int i = 0; i < 8; i++)
 		{
-			//Flip the plane if its on the reverse
-			if (dotPoints[i] < 0)
-			{
-				collisionNormal *= -1;
-				dotPoints[i] *= -1;
-			}
-
-			if (dotPoints[i] > 0.0f)
+			if (dotPoints[i] < 0.0f)
 			{
 				//Find the point in where the collision occured
 				glm::vec3 planeNormal = plane->normal;
-				if (dotPoints[i] > 0)
-				{
-					planeNormal *= -1;
-				}
 
-				glm::vec3 forceVector = -1 * box->mass * planeNormal * std::abs(glm::dot(planeNormal, box->velocity));
+				glm::vec3 forceVector = 1*  box->mass * planeNormal * std::abs(glm::dot(planeNormal, box->velocity));
 				//sphere->applyForceToActor(sphere, sphere->velocity);
 				box->applyForce(2.0f * forceVector);
-				box->position += collisionNormal * Collision * 0.5f;
+				box->position += collisionNormal * Collision;
 				return true;
 			}
 
@@ -374,9 +373,72 @@ bool DIYPhysicScene::AABB2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 	//if we are successful then test for collision
 	if (box != NULL && sphere != NULL)
 	{
+		//Apply Sat
+		float distance_squared = sphere->_radius * sphere->_radius;
 
+		glm::vec3 delta = sphere->position - box->position;
+
+		float BoxWidth = box->width / 2;
+		float BoxHeight = box->height / 2;
+		float BoxDepth = box->depth / 2;
+
+
+		glm::vec3 box1 = glm::vec3(box->position.x + BoxWidth, box->position.y + BoxHeight, box->position.z + BoxDepth);
+		glm::vec3 box2 = glm::vec3(box->position.x - BoxWidth, box->position.y - BoxHeight, box->position.z - BoxDepth);
+		//X Component
+		if (sphere->position.x < box1.x)
+		{
+			distance_squared -= pow(sphere->position.x - box1.x, 2);
+		}
+		else if (sphere->position.x > box2.x)
+		{
+			distance_squared -= pow(sphere->position.x -box2.x, 2);
+		}
+		//Y Component
+		if (sphere->position.y < box1.y)
+		{
+			distance_squared -= pow(sphere->position.y-box1.y, 2);
+		}
+		else if (sphere->position.y > box2.y)
+		{
+			distance_squared -= pow(sphere->position.y-box2.y, 2);
+		}
+		//Z Component
+		if (sphere->position.z < box1.z)
+		{
+			distance_squared -= pow(sphere->position.z-box1.z, 2);
+		}
+		else if (sphere->position.z > box2.z)
+		{
+			distance_squared -= pow(sphere->position.z-box2.z, 2);
+		}
+
+		if (distance_squared > 0)
+		{
+			glm::vec3 collisionNormal = glm::normalize(delta);
+			glm::vec3 relativeVelocity = box->velocity - sphere->velocity;
+			glm::vec3 collisionVector = collisionNormal * std::abs(glm::dot(relativeVelocity, collisionNormal));
+			glm::vec3 forceVector = collisionVector * 1.0f / (1 / box->mass + 1 / sphere->mass);
+			
+			//Newton 3rd law
+			box->applyForceToActor(sphere, forceVector);
+			
+			//float intersection = box->_radius + sphere2->_radius - Distance;
+			glm::vec3 seperationVector = collisionNormal * distance_squared * 0.5f;
+			
+			if (!box->make_static)
+			{
+				box->position -= seperationVector;
+			}
+			if (!sphere->make_static)
+			{
+				sphere->position += seperationVector;
+			}
+			
+			return true;
+		}
 	}
-	return true;
+	return false;
 }
 
 bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
@@ -426,8 +488,15 @@ bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 			glm::vec3 seperationVector = collisionNormal * intersection * 0.5f;
 
 			//Split the mofo's
-			box1->position -= seperationVector;
-			box2->position += seperationVector;
+			if (!box1->make_static)
+			{
+				box1->position -= seperationVector;
+			}
+			
+			if (!box2->make_static)
+			{
+				box2->position += seperationVector;
+			}
 			return true;
 		}
 

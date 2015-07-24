@@ -32,7 +32,7 @@ public:
 	glm::vec4 m_colour;
 	float mass;
 	float rotation2D;//2D so we only need a single float to represent our rotation
-
+	bool make_static;
 	//Ask matt why these are recongised as member variables instead of Arguments
 	DIYRigidBody(glm::vec3 position, glm::vec3 velocity, float rotation, float mass);
 
@@ -68,7 +68,7 @@ public:
 	float depth;
 	bool wireFrame;
 	BoxClass(glm::vec3 position, glm::vec3 velocity, float mass, glm::vec3 LWH,
-	glm::vec4 colour, bool a_wireframe);
+		glm::vec4 colour, bool a_wireframe,bool a_static);
 
 	virtual void makeGizmo();
 };
@@ -79,7 +79,7 @@ class SphereClass : public DIYRigidBody
 public:
 	float _radius;
 	SphereClass(glm::vec3 position, glm::vec3 velocity, float mass, float radius,
-		glm::vec4 colour);
+		glm::vec4 colour, bool a_static);
 	virtual void makeGizmo();
 	//void update(glm::vec2 gravity, float timeStep);
 };
