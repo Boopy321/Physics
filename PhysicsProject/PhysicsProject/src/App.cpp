@@ -13,15 +13,25 @@
 #include "Gizmos.h"
 #include <fstream>
 
+bool App::_Phyx(false);
+
+
 App::App()
 {
 	m_wWidth = 1024;
 	m_wHeight = 800;
 	m_Physics = new PhysicTutorial();
+	m_PhyX = new Physics();
 }
 
 App::~App()
 {
+}
+
+void App::ChangePhysics()
+{
+	_Phyx = (_Phyx == false) ? true : false;
+	//Destroy all current objects and reload Phyx or Physics 
 }
 
 #pragma region Update/Draw/Startup
@@ -118,9 +128,19 @@ void App::Draw(float a_deltatime)
 	m_frameCounter++;
 	Gizmos::clear();
 	Gizmos::addTransform(glm::mat4(1), 5.0f);
-	m_Physics->Update(a_deltatime);
+	if (!_Phyx)
+	{
+		m_Physics->Update(a_deltatime);
+	}
+	else
+	{
+		m_PhyX->Update(a_deltatime);
+	}
+		
+	
 	Gizmos::draw(_gameCamera.getProjectionView());
 	
 	//Gizmos::draw2D(glm::ortho<float>(-100, 100, -100 / AR, 100 / AR, -1.0f, 1.0f));
 }
+
 #pragma endregion

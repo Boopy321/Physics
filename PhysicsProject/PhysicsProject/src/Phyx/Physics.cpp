@@ -14,6 +14,7 @@ Physics::Physics()
 
 Physics::~Physics()
 {
+	Shutdown();
 }
 
 #pragma region PhysX

@@ -6,12 +6,17 @@
 #include "GLFW\glfw3.h"
 #include <cmath>
 #include <math.h>
+#include <iostream>
+#define MIN_LINEAR_THRESHOLD 0.001f
+#define MIN_ROTATION_THRESHOLD 0.001f
+
 
 #pragma region DIYRigidBody
 
 DIYRigidBody::DIYRigidBody(glm::vec3 position, glm::vec3 velocity, float rotation, float mass)
 {
-
+	linearDrag = 1;
+	angularDrag = 1;
 }
 
 void DIYRigidBody::applyForce(glm::vec3 force)
@@ -23,12 +28,26 @@ void DIYRigidBody::applyForce(glm::vec3 force)
 
 void DIYRigidBody::update(glm::vec3 gravity, float timeStep)
 {
-	//Only actually move if the object is not Static
-	if (!make_static)
+
+	 if (!make_static)
 	{
 		applyForce(gravity);
 		position += velocity * timeStep;
+		velocity *= drag;
+		rotationMatrix = glm::rotate(rotation2D,  glm::vec3(0.0f, 0.0f, 1.0f));
+		
+		if (glm::length(velocity) < MIN_LINEAR_THRESHOLD)
+		{
+			velocity = glm::vec3(0, 0, 0);
+		}
+		
+		if (abs(angularVelocity) < MIN_ROTATION_THRESHOLD)
+		{
+			angularVelocity = 0;
+		}
 	}
+
+	
 }
 
 void DIYRigidBody::applyForceToActor(DIYRigidBody* actor2, glm::vec3 force)
@@ -61,14 +80,14 @@ void PlaneClass::makeGizmo()
 {
 	float lineSegmentLength = distance;
 	glm::vec3 centrePoint = normal * distance;
-	glm::vec3 parallel = glm::vec3(normal.y, -normal.x, normal.z);
+	glm::vec3 parallel = glm::vec3(-normal.z, -normal.x, -normal.y);
 	//easy to rotate normal through 90degrees around z
 	glm::vec4 colour(0, 0, 0, 1);
 	glm::vec3 start = centrePoint + (parallel * lineSegmentLength);
 	glm::vec3 end = centrePoint - (parallel * lineSegmentLength);
 
 	Gizmos::addLine(start.xyz(), end.xyz(), colour);
-	Gizmos::addLine(centrePoint, centrePoint+normal, glm::vec4(0,1,0,1));
+	Gizmos::addLine(centrePoint, centrePoint+(normal * 3.0f), glm::vec4(0,1,0,1));
 }
 
 
@@ -77,7 +96,7 @@ void PlaneClass::makeGizmo()
 #pragma region BoxClass
 
 ///LWH = Length, Width, height of the box
-BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm::vec3 LWH, glm::vec4 a_colour, bool a_wireframe, bool a_static) : DIYRigidBody(a_position, a_velocity, 0, a_mass)
+BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm::vec3 LWH, glm::vec4 a_colour, bool a_wireframe, float a_elasticity,bool a_static) : DIYRigidBody(a_position, a_velocity, 0, a_mass)
 {
 	position = a_position;
 	velocity = a_velocity;
@@ -92,6 +111,9 @@ BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm
 	wireFrame = a_wireframe;
 	_shapeID = ShapeType::BOX;
 	make_static = a_static;
+
+	drag = 0.99f;
+	elasticity = a_elasticity;
 }
 
 void BoxClass::makeGizmo()
@@ -111,7 +133,7 @@ void BoxClass::makeGizmo()
 #pragma region SphereClass
 
 SphereClass::SphereClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, float a_radius,
-	glm::vec4 a_colour,bool a_static) :DIYRigidBody(a_position, a_velocity, 0, a_mass)
+	glm::vec4 a_colour, float a_elasticity,bool a_static) :DIYRigidBody(a_position, a_velocity, 0, a_mass)
 {
 	position = a_position;
 	velocity = a_velocity;
@@ -120,6 +142,8 @@ SphereClass::SphereClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mas
 	_radius = a_radius;
 	_shapeID = ShapeType::SPHERE;
 	make_static = a_static;
+	drag = 0.99f;
+	elasticity = a_elasticity;
 }
 
 void SphereClass::makeGizmo()
@@ -127,6 +151,44 @@ void SphereClass::makeGizmo()
 	Gizmos::addSphere(glm::vec3(position), _radius, 10, 10, m_colour);
 }
 
+#pragma endregion
+
+#pragma region SpringJoint
+SpringJoint::SpringJoint(DIYRigidBody* connection1, DIYRigidBody* connection2, float
+	springCoefficient, float damping) 
+{
+		_connections[0] = connection1;
+		_connections[1] = connection2;
+		_springCoefficient = springCoefficient;
+		_damping = damping;
+		_restLength = glm::length(_connections[0]->position - _connections[1]->position);
+		_shapeID = JOINT;
+
+		
+		
+}
+
+void SpringJoint::makeGizmo()
+{
+	Gizmos::addLine(_connections[0]->position, _connections[1]->position, glm::vec4(0, 0, 0, 1));
+}
+
+void SpringJoint::update(glm::vec3 gravity, float timeStep)
+{
+	
+
+
+	
+		//force = -Stiffness of spring - Displacement of the spring
+}
+
+
+void SpringJoint::debug()
+{
+
+}
+
+//Only actually move if the object is not Static
 #pragma endregion
 
 #pragma region DIYPhysicScene
@@ -172,6 +234,7 @@ static fn collisionfunctionArray[] =
 	DIYPhysicScene::Plane2Plane, DIYPhysicScene::Plane2Sphere, DIYPhysicScene::Plane2AABB,
 	DIYPhysicScene::Sphere2Plane, DIYPhysicScene::Sphere2Sphere, DIYPhysicScene::Sphere2AABB,
 	DIYPhysicScene::AABB2Plane, DIYPhysicScene::AABB2Sphere, DIYPhysicScene::AABB2AABB,
+
 };
 
 
@@ -192,7 +255,10 @@ void DIYPhysicScene::checkForCollision()
 			fn collisionFunctionPtr = collisionfunctionArray[functionIndex];
 			if (collisionFunctionPtr != NULL)
 			{
-				collisionFunctionPtr(object1, object2);
+				if (_shapeID1 != JOINT && _shapeID2 != JOINT)
+				{
+					collisionFunctionPtr(object1, object2);
+				}
 			}
 		}
 	}
@@ -246,8 +312,10 @@ bool DIYPhysicScene::Sphere2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 			glm::vec3 collisionVector = collisionNormal * std::abs(glm::dot(relativeVelocity, collisionNormal));
 			glm::vec3 forceVector = collisionVector * 1.0f / (1 / sphere1->mass + 1 / sphere2->mass);
 
+			float combinedElasticity = (sphere1->elasticity + sphere2->elasticity) / 2.0f;
+
 			//Newton 3rd law
-			sphere1->applyForceToActor(sphere2, forceVector * 2.0f);
+			sphere1->applyForceToActor(sphere2, forceVector + (forceVector * combinedElasticity));
 
 			glm::vec3 seperationVector = collisionNormal * intersection * 0.5f;
 
@@ -296,7 +364,7 @@ bool DIYPhysicScene::Sphere2Plane(PhysicsObject* obj1, PhysicsObject* obj2)
 
 			glm::vec3 forceVector = -1 * sphere->mass * planeNormal * std::abs(glm::dot(planeNormal, sphere->velocity));
 			//sphere->applyForceToActor(sphere, sphere->velocity);
-			sphere->applyForce(2.0f * forceVector);
+			sphere->applyForce(2.0f * forceVector * sphere->elasticity);
 			sphere->position += collisionNormal * intersection * 0.5f;
 			return true;
 
@@ -326,7 +394,7 @@ bool DIYPhysicScene::AABB2Plane(PhysicsObject* obj1, PhysicsObject* obj2)
 		float BoxHeight = box->height / 2;
 		float BoxDepth = box->depth / 2;
 
-		float Collision = 0.0f;
+		float Collision = 1.0f;
 
 		glm::vec3 points[8] = {
 			glm::vec3(box->position.x + BoxWidth, box->position.y + BoxHeight, box->position.z + BoxDepth),
@@ -356,8 +424,9 @@ bool DIYPhysicScene::AABB2Plane(PhysicsObject* obj1, PhysicsObject* obj2)
 
 				glm::vec3 forceVector = 1*  box->mass * planeNormal * std::abs(glm::dot(planeNormal, box->velocity));
 				//sphere->applyForceToActor(sphere, sphere->velocity);
-				box->applyForce(2.0f * forceVector);
-				box->position += collisionNormal * Collision;
+				box->applyForce(2.0f * (forceVector * box->elasticity));
+				//Separation
+				box->position += collisionNormal * -dotPoints[i];
 				return true;
 			}
 
@@ -374,43 +443,44 @@ bool DIYPhysicScene::AABB2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 	if (box != NULL && sphere != NULL)
 	{
 		//Apply Sat
-		float distance_squared = sphere->_radius * sphere->_radius;
+		float distance_squared = pow(sphere->_radius, 2);
 
 		glm::vec3 delta = sphere->position - box->position;
 
-		float BoxWidth = box->width / 2;
-		float BoxHeight = box->height / 2;
-		float BoxDepth = box->depth / 2;
+		float BoxWidth = box->width /2 ;
+		float BoxHeight = box->height /2 ;
+		float BoxDepth = box->depth /2;
 
 
-		glm::vec3 box1 = glm::vec3(box->position.x + BoxWidth, box->position.y + BoxHeight, box->position.z + BoxDepth);
-		glm::vec3 box2 = glm::vec3(box->position.x - BoxWidth, box->position.y - BoxHeight, box->position.z - BoxDepth);
+		glm::vec3 boxMax = glm::vec3(box->position.x + BoxWidth, box->position.y + BoxHeight, box->position.z + BoxDepth);
+		glm::vec3 boxMin = glm::vec3(box->position.x - BoxWidth, box->position.y - BoxHeight, box->position.z - BoxDepth);
 		//X Component
-		if (sphere->position.x < box1.x)
+		//Detects wiether there is not a collision. Works in reverse :D
+		if (sphere->position.x > boxMax.x)
 		{
-			distance_squared -= pow(sphere->position.x - box1.x, 2);
+			distance_squared -= pow(sphere->position.x - boxMax.x, 2);
 		}
-		else if (sphere->position.x > box2.x)
+		else if (sphere->position.x < boxMin.x)
 		{
-			distance_squared -= pow(sphere->position.x -box2.x, 2);
+			distance_squared -= pow(sphere->position.x - boxMin.x, 2);
 		}
 		//Y Component
-		if (sphere->position.y < box1.y)
+		if (sphere->position.y > boxMax.y)
 		{
-			distance_squared -= pow(sphere->position.y-box1.y, 2);
+			distance_squared -= pow(sphere->position.y-boxMax.y, 2);
 		}
-		else if (sphere->position.y > box2.y)
+		else if (sphere->position.y < boxMin.y)
 		{
-			distance_squared -= pow(sphere->position.y-box2.y, 2);
+			distance_squared -= pow(sphere->position.y-boxMin.y, 2);
 		}
 		//Z Component
-		if (sphere->position.z < box1.z)
+		if (sphere->position.z > boxMax.z)
 		{
-			distance_squared -= pow(sphere->position.z-box1.z, 2);
+			distance_squared -= pow(sphere->position.z-boxMax.z, 2);
 		}
-		else if (sphere->position.z > box2.z)
+		else if (sphere->position.z < boxMin.z)
 		{
-			distance_squared -= pow(sphere->position.z-box2.z, 2);
+			distance_squared -= pow(sphere->position.z-boxMin.z, 2);
 		}
 
 		if (distance_squared > 0)
@@ -419,11 +489,11 @@ bool DIYPhysicScene::AABB2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 			glm::vec3 relativeVelocity = box->velocity - sphere->velocity;
 			glm::vec3 collisionVector = collisionNormal * std::abs(glm::dot(relativeVelocity, collisionNormal));
 			glm::vec3 forceVector = collisionVector * 1.0f / (1 / box->mass + 1 / sphere->mass);
-			
+
+			float combinedElasticity = (box->elasticity + sphere->elasticity) / 2.0f;
 			//Newton 3rd law
-			box->applyForceToActor(sphere, forceVector);
-			
-			//float intersection = box->_radius + sphere2->_radius - Distance;
+			box->applyForceToActor(sphere, forceVector + (forceVector*combinedElasticity));
+
 			glm::vec3 seperationVector = collisionNormal * distance_squared * 0.5f;
 			
 			if (!box->make_static)
@@ -443,59 +513,61 @@ bool DIYPhysicScene::AABB2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 
 bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 {
-	BoxClass *box1 = dynamic_cast<BoxClass*>(obj1);
-	BoxClass *box2 = dynamic_cast<BoxClass*>(obj2);
+	BoxClass *boxMax = dynamic_cast<BoxClass*>(obj1);
+	BoxClass *boxMin = dynamic_cast<BoxClass*>(obj2);
 	//if we are successful then test for collision
-	if (box1 != NULL && box2 != NULL)
+	if (boxMax != NULL && boxMin != NULL)
 	{
 
-		glm::vec3 delta = box2->position - box1->position;
+		glm::vec3 delta = boxMin->position - boxMax->position;
 
-		glm::vec3 box1XYZmax(box1->position.x + box1->width,
-			box1->position.y + box1->height,
-			box1->position.z + box1->depth);
+		glm::vec3 boxMaxXYZmax(boxMax->position.x + boxMax->width,
+			boxMax->position.y + boxMax->height,
+			boxMax->position.z + boxMax->depth);
 
 
-		glm::vec3 box2XYZmax(box2->position.x + box2->width,
-			box2->position.y + box2->height,
-			box2->position.z + box2->depth);
+		glm::vec3 boxMinXYZmax(boxMin->position.x + boxMin->width,
+			boxMin->position.y + boxMin->height,
+			boxMin->position.z + boxMin->depth);
 
-		glm::vec3 box1overlap = box1XYZmax - box2->position;
-		glm::vec3 box2overlap = box2XYZmax - box1->position;
+		glm::vec3 boxMaxoverlap = boxMaxXYZmax - boxMin->position;
+		glm::vec3 boxMinoverlap = boxMinXYZmax - boxMax->position;
 
 		//AABB Collision check
 		if (//Length checks //x
-			box1->position.x < box2XYZmax.x &&
-			box1->position.x + box1->width > box2->position.x &&
+			boxMax->position.x < boxMinXYZmax.x &&
+			boxMax->position.x + boxMax->width > boxMin->position.x &&
 			//Width Checks // y
-			box1->position.y < box2XYZmax.y &&
-			box1->position.y + box1->height > box2->position.y &&
+			boxMax->position.y < boxMinXYZmax.y &&
+			boxMax->position.y + boxMax->height > boxMin->position.y &&
 			//Height Checks //z
-			box1->position.z < box2XYZmax.z &&
-			box1->position.z + box1->depth > box2->position.z)
+			boxMax->position.z < boxMinXYZmax.z &&
+			boxMax->position.z + boxMax->depth > boxMin->position.z)
 		{
 
 			glm::vec3 collisionNormal = glm::normalize(delta);
-			glm::vec3 relativeVelocity = box1->velocity - box2->velocity;
+			glm::vec3 relativeVelocity = boxMax->velocity - boxMin->velocity;
 			glm::vec3 collisionVector = collisionNormal * std::abs(glm::dot(relativeVelocity, collisionNormal));
-			glm::vec3 forceVector = collisionVector * 1.0f / (1 / box1->mass + 1 / box2->mass);
+			glm::vec3 forceVector = collisionVector * 1.0f / (1 / boxMax->mass + 1 / boxMin->mass);
 			//Apply Force if successful
-			box1->applyForceToActor(box2, forceVector * 2.0f);
+			float combinedElasticty = (boxMax->elasticity, boxMin->elasticity) / 2.0f; 
+
+			boxMax->applyForceToActor(boxMin, (forceVector+ (forceVector * combinedElasticty)));
 			//Seperate the boxes based of the smallest overlap
 			glm::vec3 intersection;
-			float min = glm::min(box1overlap.x, glm::min(box1overlap.y, box1overlap.z));
+			float min = glm::min(boxMaxoverlap.x, glm::min(boxMaxoverlap.y, boxMaxoverlap.z));
 
-			glm::vec3 seperationVector = collisionNormal * intersection * 0.5f;
+			glm::vec3 seperationVector = collisionNormal * min * 0.5f;
 
 			//Split the mofo's
-			if (!box1->make_static)
+			if (!boxMax->make_static)
 			{
-				box1->position -= seperationVector;
+				boxMax->position -= seperationVector;
 			}
 			
-			if (!box2->make_static)
+			if (!boxMin->make_static)
 			{
-				box2->position += seperationVector;
+				boxMin->position += seperationVector;
 			}
 			return true;
 		}
@@ -506,7 +578,42 @@ bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 
 
 
+
+//glm::vec3 DIYPhysicScene::SphereToSpherePoint(PhysicsObject* obj1, PhysicsObject* obj2)
+//{
+//	SphereClass *sphere1 = dynamic_cast<SphereClass*>(obj1);
+//	SphereClass *sphere2 = dynamic_cast<SphereClass*>(obj2);
+//
+//	if (sphere1 != NULL && sphere2 != NULL)
+//	{
+//		glm::vec3 Point(sphere2->position - sphere1->position);
+//		Point = glm::normalize(Point);
+//		Point *= sphere1->_radius;
+//		Point = Point + sphere1->position;
+//		return Point;
+//	}
+//
+//}
+//
+//float DIYPhysicScene::SphereToPlanePoint(PhysicsObject* obj1, PhysicsObject* obj2)
+//{
+//	SphereClass *sphere = dynamic_cast<SphereClass*>(obj1);
+//	PlaneClass *plane = dynamic_cast<PlaneClass*>(obj2);
+//
+//	if (sphere != NULL && plane != NULL)
+//	{
+//
+//	}
+//}
+//
+//float DIYPhysicScene::SphereToAABBPoint(PhysicsObject* obj1, PhysicsObject* obj2)
+//{
+//	SphereClass *sphere = dynamic_cast<SphereClass*>(obj1);
+//	BoxClass *box = dynamic_cast<BoxClass*>(obj2);
+//
+//	if (sphere != NULL && box != NULL)
+//	{
+//
+//	}
+//}
 #pragma endregion
-
-
-

@@ -21,6 +21,8 @@ public:
 	void Draw(float a_deltatime);
 	void Shutdown();
 
+	static void ChangePhysics();
+
 protected:
 	GLFWwindow* window;
 	float previousTime;
@@ -41,7 +43,9 @@ private:
 	Light* m_light;
 
 	glm::vec4 m_clearColour;
-
+	Physics* m_PhyX;
 	PhysicTutorial* m_Physics;
+
+	static bool _Phyx;
 };
 
