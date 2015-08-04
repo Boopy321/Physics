@@ -163,8 +163,6 @@ SpringJoint::SpringJoint(DIYRigidBody* connection1, DIYRigidBody* connection2, f
 		_damping = damping;
 		_restLength = glm::length(_connections[0]->position - _connections[1]->position);
 		_shapeID = JOINT;
-
-		
 		
 }
 
@@ -175,11 +173,20 @@ void SpringJoint::makeGizmo()
 
 void SpringJoint::update(glm::vec3 gravity, float timeStep)
 {
-	
-
-
-	
+	//Hooks law
+	glm::vec3 positionDelta = _connections[1]->position - _connections[0]->position;
 		//force = -Stiffness of spring - Displacement of the spring
+
+	float curDistance = glm::length(positionDelta)- _restLength; 
+
+	glm::vec3 direction = glm::normalize(positionDelta);
+	
+	float force = curDistance * _springCoefficient;
+
+	//Always apply force(No need for If statements as it will always adjust)
+	_connections[0]->applyForce(direction * force);
+	_connections[1]->applyForce(-direction * force);
+
 }
 
 

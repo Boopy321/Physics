@@ -14,7 +14,7 @@ PhysicTutorial::~PhysicTutorial()
 void PhysicTutorial::DIYPhysicsSetup1()
 {
 	physicsScene = new DIYPhysicScene();
-	physicsScene->gravity = glm::vec3(0, -100.0, 0);
+	physicsScene->gravity = glm::vec3(0, -10.0, 0);
 	physicsScene->timeStep = .001f;
 	//add four balls to our simulation
 	PlaneClass* newLine;
@@ -50,7 +50,7 @@ void PhysicTutorial::DIYPhysicsSetup1()
 	
 	physicsScene->addActor(ball1);
 
-	int numberBalls = 20;
+	int numberBalls = 2;
 	for (int i = 1; i <= numberBalls; i++)
 	{
 		if (i == numberBalls)
@@ -66,7 +66,7 @@ void PhysicTutorial::DIYPhysicsSetup1()
 	
 
 		physicsScene->addActor(ball2);
-		SpringJoint* spring = new SpringJoint(ball1, ball2, .5, .9999f);
+		SpringJoint* spring = new SpringJoint(ball1, ball2, 5, .9999f);
 		physicsScene->addActor(spring);
 		ball1 = ball2;	}	
 
