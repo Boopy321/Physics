@@ -3,10 +3,12 @@
 #include "glm\gtc\matrix_transform.hpp"
 #include "glm\gtx\transform.hpp"
 #include "Gizmos.h"
+#include <glm/gtx/rotate_vector.hpp>
 #include "GLFW\glfw3.h"
 #include <cmath>
 #include <math.h>
 #include <iostream>
+
 #define MIN_LINEAR_THRESHOLD 0.001f
 #define MIN_ROTATION_THRESHOLD 0.001f
 
@@ -87,6 +89,16 @@ void PlaneClass::makeGizmo()
 	glm::vec3 end = centrePoint - (parallel * lineSegmentLength);
 
 	Gizmos::addLine(start.xyz(), end.xyz(), colour);
+
+	if (parallel == glm::vec3(0, 1, 0))
+	{
+		//blah blah
+	}
+	else
+	{
+		Gizmos::addAABB(centrePoint, glm::vec3(distance, distance, 0), glm::vec4(0, 0, 0, 1), &glm::orientation(parallel, glm::vec3(0, 1, 0)));
+	}
+	
 	Gizmos::addLine(centrePoint, centrePoint+(normal * 3.0f), glm::vec4(0,1,0,1));
 }
 
@@ -181,7 +193,7 @@ void SpringJoint::update(glm::vec3 gravity, float timeStep)
 
 	glm::vec3 direction = glm::normalize(positionDelta);
 	
-	float force = curDistance * _springCoefficient;
+	float force = (curDistance * _springCoefficient) - (_damping * gravity.y);
 
 	//Always apply force(No need for If statements as it will always adjust)
 	_connections[0]->applyForce(direction * force);
@@ -244,7 +256,7 @@ static fn collisionfunctionArray[] =
 
 };
 
-
+#pragma region Collisions
 void DIYPhysicScene::checkForCollision()
 {
 	int actorCount = actors.size();
@@ -450,13 +462,13 @@ bool DIYPhysicScene::AABB2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 	if (box != NULL && sphere != NULL)
 	{
 		//Apply Sat
-		float distance_squared = pow(sphere->_radius, 2);
+		float distance_squared = pow(sphere->_radius, 2.0f);
 
 		glm::vec3 delta = sphere->position - box->position;
 
-		float BoxWidth = box->width /2 ;
-		float BoxHeight = box->height /2 ;
-		float BoxDepth = box->depth /2;
+		float BoxWidth = box->width *0.9f ;
+		float BoxHeight = box->height *0.9f;
+		float BoxDepth = box->depth *0.9f;
 
 
 		glm::vec3 boxMax = glm::vec3(box->position.x + BoxWidth, box->position.y + BoxHeight, box->position.z + BoxDepth);
@@ -528,14 +540,14 @@ bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 
 		glm::vec3 delta = boxMin->position - boxMax->position;
 
-		glm::vec3 boxMaxXYZmax(boxMax->position.x + boxMax->width,
-			boxMax->position.y + boxMax->height,
-			boxMax->position.z + boxMax->depth);
+		glm::vec3 boxMaxXYZmax(boxMax->position.x + boxMax->width * 2,
+			boxMax->position.y + boxMax->height * 2,
+			boxMax->position.z + boxMax->depth * 2);
 
 
-		glm::vec3 boxMinXYZmax(boxMin->position.x + boxMin->width,
-			boxMin->position.y + boxMin->height,
-			boxMin->position.z + boxMin->depth);
+		glm::vec3 boxMinXYZmax(boxMin->position.x + boxMin->width *2,
+			boxMin->position.y + boxMin->height * 2,
+			boxMin->position.z + boxMin->depth * 2);
 
 		glm::vec3 boxMaxoverlap = boxMaxXYZmax - boxMin->position;
 		glm::vec3 boxMinoverlap = boxMinXYZmax - boxMax->position;
@@ -564,7 +576,7 @@ bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 			glm::vec3 intersection;
 			float min = glm::min(boxMaxoverlap.x, glm::min(boxMaxoverlap.y, boxMaxoverlap.z));
 
-			glm::vec3 seperationVector = collisionNormal * min * 0.5f;
+			glm::vec3 seperationVector = (collisionNormal * min) * 0.001f;
 
 			//Split the mofo's
 			if (!boxMax->make_static)
@@ -582,45 +594,6 @@ bool DIYPhysicScene::AABB2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 	}
 	return false;
 }
+#pragma endregion
 
-
-
-
-//glm::vec3 DIYPhysicScene::SphereToSpherePoint(PhysicsObject* obj1, PhysicsObject* obj2)
-//{
-//	SphereClass *sphere1 = dynamic_cast<SphereClass*>(obj1);
-//	SphereClass *sphere2 = dynamic_cast<SphereClass*>(obj2);
-//
-//	if (sphere1 != NULL && sphere2 != NULL)
-//	{
-//		glm::vec3 Point(sphere2->position - sphere1->position);
-//		Point = glm::normalize(Point);
-//		Point *= sphere1->_radius;
-//		Point = Point + sphere1->position;
-//		return Point;
-//	}
-//
-//}
-//
-//float DIYPhysicScene::SphereToPlanePoint(PhysicsObject* obj1, PhysicsObject* obj2)
-//{
-//	SphereClass *sphere = dynamic_cast<SphereClass*>(obj1);
-//	PlaneClass *plane = dynamic_cast<PlaneClass*>(obj2);
-//
-//	if (sphere != NULL && plane != NULL)
-//	{
-//
-//	}
-//}
-//
-//float DIYPhysicScene::SphereToAABBPoint(PhysicsObject* obj1, PhysicsObject* obj2)
-//{
-//	SphereClass *sphere = dynamic_cast<SphereClass*>(obj1);
-//	BoxClass *box = dynamic_cast<BoxClass*>(obj2);
-//
-//	if (sphere != NULL && box != NULL)
-//	{
-//
-//	}
-//}
 #pragma endregion

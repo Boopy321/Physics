@@ -22,6 +22,7 @@ App::App()
 	m_wHeight = 800;
 	m_Physics = new PhysicTutorial();
 	m_PhyX = new Physics();
+
 }
 
 App::~App()
@@ -59,6 +60,7 @@ bool App::StartUp()
 
 	std::cout << "OpenGL loaded" << std::endl;
 
+	//m_bar = 
 	_gameCamera.SetInputWindow(window);
 
 	//Load Render into Tutorial
@@ -110,6 +112,10 @@ void App::Update(float deltatime)
 		m_framerate = m_frameCounter;
 		m_frameCounter = 0;
 	}
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		ChangePhysics();
+	}
 }
 
 void App::Shutdown()
@@ -140,7 +146,7 @@ void App::Draw(float a_deltatime)
 	
 	Gizmos::draw(_gameCamera.getProjectionView());
 	
-	//Gizmos::draw2D(glm::ortho<float>(-100, 100, -100 / AR, 100 / AR, -1.0f, 1.0f));
+
 }
 
 #pragma endregion
