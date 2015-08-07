@@ -63,8 +63,9 @@ bool App::StartUp()
 	//m_bar = 
 	_gameCamera.SetInputWindow(window);
 
-	//Load Render into Tutorial
-	
+
+	keypress = false;
+
 	m_clearColour = glm::vec4(1.0f, 1.0f, 1.00f, 1.0f);
 	return true;
 }
@@ -112,10 +113,13 @@ void App::Update(float deltatime)
 		m_framerate = m_frameCounter;
 		m_frameCounter = 0;
 	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+
+	
+	if (GetKeyDown() != keypress)
 	{
 		ChangePhysics();
 	}
+	
 }
 
 void App::Shutdown()
@@ -134,19 +138,32 @@ void App::Draw(float a_deltatime)
 	m_frameCounter++;
 	Gizmos::clear();
 	Gizmos::addTransform(glm::mat4(1), 5.0f);
-	if (!_Phyx)
+	if (_Phyx)
 	{
-		m_Physics->Update(a_deltatime);
+		m_Physics->Update(a_deltatime,_gameCamera);
 	}
 	else
 	{
-		m_PhyX->Update(a_deltatime);
+		m_PhyX->Update(a_deltatime,_gameCamera);
 	}
 		
-	
 	Gizmos::draw(_gameCamera.getProjectionView());
-	
 
 }
 
+bool App::GetKeyDown()
+{
+
+	if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_SPACE) == GLFW_PRESS && !keypress)
+	{
+		keypress = true;
+		return true;
+	}
+	else if (!glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_SPACE) == GLFW_PRESS && keypress == true)
+	{
+		keypress = false;
+		return false;
+	}
+	return false;
+}
 #pragma endregion

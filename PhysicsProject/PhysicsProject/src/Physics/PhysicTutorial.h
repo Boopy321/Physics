@@ -1,8 +1,8 @@
 #pragma once
 
 class DIYPhysicScene;
-
-
+struct GLFWwindow;
+class FlyCamera;
 class PhysicTutorial
 {
 public:
@@ -11,13 +11,12 @@ public:
 
 	void DIYPhysicsSetup1();
 	void onUpdate(float deltatime);
-	void Update(float deltatime);
+	void Update(float deltatime, FlyCamera &a_gameCamera);
 
-	void DrawSpheres(DIYPhysicScene *that);
-	void DrawAABB(DIYPhysicScene *that);
-	void DrawPlanes(DIYPhysicScene *that);
+
 
 private: 
 	DIYPhysicScene* physicsScene;
+	GLFWwindow* m_pWindow;
 };
 

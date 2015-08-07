@@ -30,13 +30,13 @@ class DIYRigidBody : public PhysicsObject
 public:
 	glm::vec3 position;
 	glm::vec3 velocity;
-	glm::vec4 m_colour;
+	glm::vec4 colour;
 
 	float rotateInertia;
 	float mass;
 	float elasticity;
 	float linearDrag, angularDrag, angularVelocity, drag;
-	float rotation2D;//2D so we only need a single float to represent our rotation
+	
 	glm::mat4 rotationMatrix;
 	bool make_static;
 	//Ask matt why these are recongised as member variables instead of Arguments
@@ -44,8 +44,6 @@ public:
 
 	virtual void update(glm::vec3 gravity, float timeStep);
 	virtual void debug();
-
-
 
 	void applyForce(glm::vec3 force);
 	void applyForceToActor(DIYRigidBody* actor2, glm::vec3 force);
@@ -61,9 +59,9 @@ public:
 	void virtual update(glm::vec3 gravity, float timeStep){};
 	void virtual debug(){};
 	void virtual makeGizmo();
+
 	PlaneClass(glm::vec3 normal, float distance);
 	PlaneClass();
-
 };
 
 
@@ -72,9 +70,9 @@ class BoxClass : public DIYRigidBody
 	
 public:
 	float width;
-	
 	float height;
 	float depth;
+
 	bool wireFrame;
 	BoxClass(glm::vec3 position, glm::vec3 velocity, float mass, glm::vec3 LWH,
 		glm::vec4 colour, bool a_wireframe, float a_elasticity,bool a_static);
@@ -90,7 +88,6 @@ public:
 	SphereClass(glm::vec3 position, glm::vec3 velocity, float mass, float radius,
 		glm::vec4 colour, float a_elasticity, bool a_static);
 	virtual void makeGizmo();
-	//void update(glm::vec2 gravity, float timeStep);
 };
 
 class SpringJoint :public PhysicsObject
@@ -120,10 +117,6 @@ public:
 	void debugScene();
 	void addGizmos();
 
-//glm::vec3 SphereToSpherePoint(PhysicsObject*, PhysicsObject*);
-//glm::vec3 SphereToPlanePoint(PhysicsObject*, PhysicsObject*);
-//glm::vec3 SphereToAABBPoint(PhysicsObject*, PhysicsObject*);
-
 	static bool Plane2Plane(PhysicsObject* , PhysicsObject*);
 	static bool Plane2Sphere(PhysicsObject*, PhysicsObject*);
 	static bool Plane2AABB(PhysicsObject*, PhysicsObject*);
@@ -140,3 +133,4 @@ public:
 	
 	void checkForCollision();
 };
+

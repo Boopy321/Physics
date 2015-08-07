@@ -31,12 +31,12 @@ void DIYRigidBody::applyForce(glm::vec3 force)
 void DIYRigidBody::update(glm::vec3 gravity, float timeStep)
 {
 
-	 if (!make_static)
+	if (!make_static)
 	{
-		applyForce(gravity);
+		velocity += gravity;
 		position += velocity * timeStep;
 		velocity *= drag;
-		rotationMatrix = glm::rotate(rotation2D,  glm::vec3(0.0f, 0.0f, 1.0f));
+		rotationMatrix = glm::rotate(90.0f,  glm::vec3(0.0f, 0.0f, 1.0f));
 		
 		if (glm::length(velocity) < MIN_LINEAR_THRESHOLD)
 		{
@@ -113,7 +113,7 @@ BoxClass::BoxClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mass, glm
 	position = a_position;
 	velocity = a_velocity;
 	mass = a_mass;
-	m_colour = a_colour;
+	colour = a_colour;
 
 	width = LWH.x;
 	height = LWH.y;
@@ -132,11 +132,11 @@ void BoxClass::makeGizmo()
 {
 	if (wireFrame)
 	{
-		Gizmos::addAABB(position, glm::vec3(width, height, depth), m_colour);
+		Gizmos::addAABB(position, glm::vec3(width, height, depth), colour);
 	}
 	else
 	{
-		Gizmos::addAABBFilled(position, glm::vec3(width, height, depth), m_colour);
+		Gizmos::addAABBFilled(position, glm::vec3(width, height, depth), colour);
 	}
 
 }
@@ -150,7 +150,7 @@ SphereClass::SphereClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mas
 	position = a_position;
 	velocity = a_velocity;
 	mass = a_mass;
-	m_colour = a_colour;
+	colour = a_colour;
 	_radius = a_radius;
 	_shapeID = ShapeType::SPHERE;
 	make_static = a_static;
@@ -160,7 +160,7 @@ SphereClass::SphereClass(glm::vec3 a_position, glm::vec3 a_velocity, float a_mas
 
 void SphereClass::makeGizmo()
 {
-	Gizmos::addSphere(glm::vec3(position), _radius, 10, 10, m_colour);
+	Gizmos::addSphere(glm::vec3(position), _radius, 10, 10, colour);
 }
 
 #pragma endregion
@@ -291,20 +291,12 @@ bool DIYPhysicScene::Plane2Plane(PhysicsObject*, PhysicsObject*)
 
 bool DIYPhysicScene::Plane2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
 {
-	//try to cast objects to sphere and sphere
-	PlaneClass *plane = dynamic_cast<PlaneClass*>(obj1);
-	SphereClass *sphere = dynamic_cast<SphereClass*>(obj2);
-	//if we are successful then test for collision
-	if (plane != NULL && sphere != NULL)
-	{
-
-	}
-	return false;
+	return Sphere2Plane(obj2, obj1);
 }
 
 bool DIYPhysicScene::Plane2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 {
-	return false;
+	return AABB2Plane(obj2, obj1);
 }
 
 bool DIYPhysicScene::Sphere2Sphere(PhysicsObject* obj1, PhysicsObject* obj2)
@@ -396,7 +388,7 @@ bool DIYPhysicScene::Sphere2Plane(PhysicsObject* obj1, PhysicsObject* obj2)
 
 bool DIYPhysicScene::Sphere2AABB(PhysicsObject* obj1, PhysicsObject* obj2)
 {
-	return false;
+	return AABB2Sphere(obj2, obj1);
 }
 
 bool DIYPhysicScene::AABB2Plane(PhysicsObject* obj1, PhysicsObject* obj2)

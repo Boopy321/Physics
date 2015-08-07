@@ -1,6 +1,5 @@
 #pragma once
 
-
 class Physics;
 struct GLFWwindow;
 class PhysicTutorial;
@@ -15,12 +14,13 @@ public:
 	~App();
 	bool StartUp();
 	void Run();
-
+	bool keypress;
 
 	void Update(float deltatime);
 	void Draw(float a_deltatime);
 	void Shutdown();
 
+	bool GetKeyDown();
 	static void ChangePhysics();
 
 protected:
