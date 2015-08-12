@@ -74,6 +74,7 @@ struct FilterGroup
 
 class MyControllerHitReport;
 class MycollisionCallBack;
+class ParticleEmitter;
 
 class Physics
 {
@@ -98,14 +99,20 @@ public:
 	void setupFiltering(PxRigidActor* actor, PxU32 filterGroup, PxU32
 		filterMask);
 	void setShapeAsTrigger(PxRigidActor* actorIn);
+	void CreateTestBed();
+	void PlayerController();
+	void PlayerUpdate(float a_deltatime);
+
+
 	static PxFilterFlags myFliterShader(PxFilterObjectAttributes attributes0, PxFilterData
 		filterData0,
 		PxFilterObjectAttributes attributes1, PxFilterData filterData1,
 		PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize);
 	glm::vec3 Px2GlV3(PxVec3 convert);
-	void PlayerController();
-	void PlayerUpdate(float a_deltatime);
+
 	float _characterYVelocity, _characterRotation, _playerGravity;
+
+
 private:  
 	std::vector<PxRigidActor*> g_PhysXActors;
 	std::vector<PxArticulation*> g_PhysXActorsRagDolls;
@@ -121,6 +128,7 @@ private:
 	MyControllerHitReport* myHitReport;
 	PxControllerManager* gCharacterManager;
 	PxController* gPlayerController;
+	ParticleEmitter* m_particleEmitter;
 };
 
 class myAllocator : public PxAllocatorCallback
@@ -182,14 +190,3 @@ private:
 	bool* m_trigger;// Swap this to trigger the triggers SHOTS FIRED OUT A TRIGGER
 };
 
-
-
-class MycollisionCallBack : public PxSimulationEventCallback
-{
-	virtual void onContact(const PxContactPairHeader& pairHeader, const
-		PxContactPair* pairs, PxU32 nbPairs){};
-	virtual void onTrigger(PxTriggerPair* pairs, PxU32 nbPairs){};
-	virtual void onConstraintBreak(PxConstraintInfo*, PxU32){};
-	virtual void onWake(PxActor**, PxU32){};
-	virtual void onSleep(PxActor**, PxU32){};
-};

@@ -90,6 +90,8 @@
     <ClCompile Include="src\Assets\Camera\Camera.cpp" />
     <ClCompile Include="src\Assets\Camera\FlyCamera.cpp" />
     <ClCompile Include="src\Assets\InputManager\InputManager.cpp" />
+    <ClCompile Include="src\Assets\Particle\ParticleEmitter.cpp" />
+    <ClCompile Include="src\Assets\Particle\ParticleFluidEmitter.cpp" />
     <ClCompile Include="src\Assets\Texture2D\Texture2D.cpp" />
     <ClCompile Include="src\Assets\Timer\Timer.cpp" />
     <ClCompile Include="src\Physics\PhysicsActor.cpp" />
@@ -104,6 +106,8 @@
     <ClInclude Include="src\Assets\Camera\Camera.h" />
     <ClInclude Include="src\Assets\Camera\FlyCamera.h" />
     <ClInclude Include="src\Assets\InputManager\InputManager.h" />
+    <ClInclude Include="src\Assets\Particle\ParticleEmitter.h" />
+    <ClInclude Include="src\Assets\Particle\ParticleFluidEmitter.h" />
     <ClInclude Include="src\Assets\Texture2D\Texture2D.h" />
     <ClInclude Include="src\Assets\Timer\Timer.h" />
     <ClInclude Include="src\Physics\PhysicsActor.h" />

@@ -51,6 +51,12 @@
     <ClCompile Include="src\Phyx\Physics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Assets\Particle\ParticleEmitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Assets\Particle\ParticleFluidEmitter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App.h">
@@ -85,6 +91,12 @@
     </ClInclude>
     <ClInclude Include="src\Phyx\Physics.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Assets\Particle\ParticleEmitter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Assets\Particle\ParticleFluidEmitter.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
