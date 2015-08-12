@@ -303,6 +303,15 @@ void Physics::PlayerUpdate(float a_deltatime)
 	{
 		velocity.z += movementSpeed* a_deltatime;
 	}
+
+	if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		velocity.x -= movementSpeed * a_deltatime;
+	}
+	if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		velocity.x += movementSpeed* a_deltatime;
+	}
 	//To do.. add code to control z movement and jumping
 	float minDistance = 0.001f;
 	PxControllerFilters filter;
@@ -547,3 +556,23 @@ void MyControllerHitReport::onShapeHit(const PxControllerShapeHit &hit)
 	}
 }
 #pragma endregion
+
+#pragma region TriggerVolumes
+//
+//virtual void onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs,
+//	PxU32 nbPairs)
+//{
+//	for (PxU32 i = 0; i < nbPairs; i++)
+//	{
+//		const PxContactPair& cp = pairs[i];
+//		//only interested in touches found and lost
+//		if (cp.events & PxPairFlag::eNOTIFY_TOUCH_FOUND)
+//		{
+//			cout << "Collision Detected between: ";
+//			cout << pairHeader.actors[0]->getName();
+//			cout << pairHeader.actors[1]->getName() << endl;
+//		}
+//	}
+//}
+
+#pragma region endregion
