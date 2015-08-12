@@ -136,6 +136,7 @@ Physics::~Physics()
 
 void Physics::setUpPhysX()
 {
+	
 	PxAllocatorCallback *myCallback = new myAllocator();
 	g_PhysicsFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, *myCallback,
 		gDefaultErrorCallback);
@@ -146,9 +147,16 @@ void Physics::setUpPhysX()
 	g_PhysicsMaterial = g_Physics->createMaterial(0.5f, 0.5f,.5f);
 	PxSceneDesc sceneDesc(g_Physics->getTolerancesScale());
 	sceneDesc.gravity = PxVec3(0, -10.0f, 0);
-	sceneDesc.filterShader = &physx::PxDefaultSimulationFilterShader;
+
+	sceneDesc.filterShader = myFliterShader;
 	sceneDesc.cpuDispatcher = PxDefaultCpuDispatcherCreate(1);
+
 	g_PhysicsScene = g_Physics->createScene(sceneDesc);
+
+	MycollisionCallBack* mycollisionCallBack = new MycollisionCallBack();
+	g_PhysicsScene->setSimulationEventCallback(mycollisionCallBack);
+
+
 }
 
 void Physics::upDatePhysx(float a_deltaTime)
@@ -210,8 +218,8 @@ void Physics::ObjectSpawner()
 
 	PxTransform transform(PxVec3(0, 5, 0));
 
-		PxRigidDynamic* dynamicActor = PxCreateDynamic(*g_Physics, transform, box1,
-		*g_PhysicsMaterial, density);
+	PxRigidDynamic* dynamicActor = PxCreateDynamic(*g_Physics, transform, box1,
+	*g_PhysicsMaterial, density);
 
 	//add it to the physX scene
 	g_PhysicsScene->addActor(*dynamicActor);
@@ -242,6 +250,15 @@ void Physics::ObjectSpawner()
 	g_PhysicsScene->addActor(*dynamicActor);
 	g_PhysXActors.push_back(dynamicActor);
 
+	setupFiltering(dynamicActor, FilterGroup::ePLAYER, FilterGroup::eGROUND |
+		FilterGroup::ePLATFORM);
+
+	PxBoxGeometry box2(2, 4, 2);
+	PxRigidStatic* staticActor = PxCreateStatic(*g_Physics, PxTransform(PxVec3(0, 0, 0)), box2,
+		*g_PhysicsMaterial);
+
+	setShapeAsTrigger(staticActor);
+	
 
 
 
@@ -303,6 +320,14 @@ void Physics::PlayerUpdate(float a_deltatime)
 	{
 		velocity.z += movementSpeed* a_deltatime;
 	}
+	if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		velocity.x -= movementSpeed* a_deltatime;
+	}
+	if (glfwGetKey(glfwGetCurrentContext(), GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		velocity.x += movementSpeed* a_deltatime;
+	}
 	//To do.. add code to control z movement and jumping
 	float minDistance = 0.001f;
 	PxControllerFilters filter;
@@ -314,8 +339,38 @@ void Physics::PlayerUpdate(float a_deltatime)
 		filter);
 
 }
-#pragma endregion
 
+
+void Physics::setupFiltering(PxRigidActor* actor, PxU32 filterGroup, PxU32
+	filterMask)
+{
+	PxFilterData filterData;
+	filterData.word0 = filterGroup; // word0 = own ID
+	filterData.word1 = filterMask; // word1 = ID mask to filter pairs that trigger a contact callback;
+	const PxU32 numShapes = actor->getNbShapes();
+	PxShape** shapes = (PxShape**)_aligned_malloc(sizeof(PxShape*)*numShapes,
+		16);
+	actor->getShapes(shapes, numShapes);
+	for (PxU32 i = 0; i < numShapes; i++)
+	{
+		PxShape* shape = shapes[i];
+		shape->setSimulationFilterData(filterData);
+	}
+	_aligned_free(shapes);
+}void Physics::setShapeAsTrigger(PxRigidActor* actorIn)
+{
+	PxRigidStatic* staticActor = actorIn->is<PxRigidStatic>();
+	assert(staticActor);
+	const PxU32 numShapes = staticActor->getNbShapes();
+	PxShape** shapes = (PxShape**)_aligned_malloc(sizeof(PxShape*)*numShapes, 16);
+	staticActor->getShapes(shapes, numShapes);
+	for (PxU32 i = 0; i < numShapes; i++)
+	{
+		shapes[i]->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+		shapes[i]->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+	}
+}
+#pragma endregion
 
 #pragma region Draw/Update
 void Physics::Update(float deltatime, FlyCamera &a_gameCamera)
@@ -547,3 +602,65 @@ void MyControllerHitReport::onShapeHit(const PxControllerShapeHit &hit)
 	}
 }
 #pragma endregion
+
+#pragma region Callback
+MycollisionCallBack::MycollisionCallBack()
+{
+	m_trigger = false;
+}
+void MycollisionCallBack::onContact(const PxContactPairHeader& pairHeader, const PxContactPair* pairs,
+	PxU32 nbPairs)
+{
+	for (PxU32 i = 0; i < nbPairs; i++)
+	{
+		const PxContactPair& cp = pairs[i];
+		//only interested in touches found and lost
+		if (cp.events & PxPairFlag::eNOTIFY_TOUCH_FOUND)
+		{
+			//cout << "Collision Detected between: ";
+			//cout << pairHeader.actors[0]->getName();
+			//cout << pairHeader.actors[1]->getName() << endl;
+		}
+	}
+}
+
+void MycollisionCallBack::onTrigger(PxTriggerPair* pairs, PxU32 nbPairs)
+{
+	for (PxU32 i = 0; i < nbPairs; i++)
+	{
+		PxTriggerPair* pair = pairs + i;
+		PxActor* triggerActor = pair->triggerActor;
+		PxActor* otherActor = pair->otherActor;
+
+		std::cout << "Trigger volume hit" << std::endl;
+		//cout << otherActor->getName();
+		//cout << " Entered Trigger ";
+		//cout << triggerActor->getName() << endl;
+	}
+};
+
+PxFilterFlags Physics::myFliterShader(PxFilterObjectAttributes attributes0, PxFilterData
+	filterData0,
+	PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+	PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
+{
+	// let triggers through
+	if (PxFilterObjectIsTrigger(attributes0) ||
+		PxFilterObjectIsTrigger(attributes1))
+	{
+		pairFlags = PxPairFlag::eTRIGGER_DEFAULT;
+		return PxFilterFlag::eDEFAULT;
+	}
+	// generate contacts for all that were not filtered above
+	pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+	// trigger the contact callback for pairs (A,B) where
+	// the filtermask of A contains the ID of B and vice versa.
+	if ((filterData0.word0 & filterData1.word1) && (filterData1.word0 &
+		filterData0.word1))
+		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND |
+		PxPairFlag::eNOTIFY_TOUCH_LOST;
+	return PxFilterFlag::eDEFAULT;
+}
+
+#pragma endregion
+

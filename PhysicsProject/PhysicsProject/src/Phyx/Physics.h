@@ -61,7 +61,19 @@ struct RagdollNode
 
 
 #pragma endregion
+
+struct FilterGroup
+{
+	enum Enum
+	{
+		ePLAYER = (1 << 0),
+		ePLATFORM = (1 << 1),
+		eGROUND = (1 << 2)
+	};
+};
+
 class MyControllerHitReport;
+class MycollisionCallBack;
 
 class Physics
 {
@@ -83,6 +95,13 @@ public:
 	void addBox(PxShape* pShape, PxRigidActor* actor);
 	void addSphere(PxShape* pShape, PxRigidActor* actor);
 	void addCapsule(PxShape* pShape, PxRigidActor* actor);
+	void setupFiltering(PxRigidActor* actor, PxU32 filterGroup, PxU32
+		filterMask);
+	void setShapeAsTrigger(PxRigidActor* actorIn);
+	static PxFilterFlags myFliterShader(PxFilterObjectAttributes attributes0, PxFilterData
+		filterData0,
+		PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+		PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize);
 	glm::vec3 Px2GlV3(PxVec3 convert);
 	void PlayerController();
 	void PlayerUpdate(float a_deltatime);
@@ -145,5 +164,23 @@ public:
 	void clearPlayerContactNormal(){ _playerContactNormal = PxVec3(0, 0, 0); };
 	PxVec3 _playerContactNormal;
 };
+
+using namespace std;
+
+class MycollisionCallBack : public PxSimulationEventCallback
+{
+public:
+	MycollisionCallBack();
+	virtual void onContact(const PxContactPairHeader& pairHeader, const
+	PxContactPair* pairs, PxU32 nbPairs) ;
+	virtual void onTrigger(PxTriggerPair* pairs, PxU32 nbPairs);
+	virtual void onConstraintBreak(PxConstraintInfo*, PxU32){};
+	virtual void onWake(PxActor**, PxU32){};
+	virtual void onSleep(PxActor**, PxU32){};
+
+private:
+	bool* m_trigger;// Swap this to trigger the triggers SHOTS FIRED OUT A TRIGGER
+};
+
 
 
